@@ -1,0 +1,8 @@
+kaggle - Healthcare Insurance - https://www.kaggle.com/datasets/mustafaoz158/healthcare-insurance
+Tabela base para treinamento do modelo
+
+stateonline_13(Sheet1) - https://www.census.gov/data/tables/2014/demo/income-poverty/p60-249.html Median Household Income (In 2013 Inflation-adjusted Dollars) by State Ranked from Highest to Lowest Using 3-Year Average:  2011-2013 [<1.0 MB]
+Renda média por estado, que será convertido para renda média por região
+
+nvsr66_04.pdf - https://www.cdc.gov/nchs/data/nvsr/nvsr66/nvsr66_04.pdf - United States Life Tables, 2014. NVSR Volume 66, Number 4. 64pp. (PHS) 2017-1120 - https://www.cdc.gov/nchs/products/life_tables.htm
+Dados de expectativa de vida, utilizado o dado de numéro da porcentagem de sobreviventes da população por idade
