@@ -30,6 +30,7 @@ Dados obtidos do Kaggle (`insurance.csv`), contendo informações sobre idade, g
 **Enriquecimento**:
 
 - **Census**: Dados de renda média por região foram adicionados, com a hipótese de que a renda média impacta os custos hospitalares devido à maior qualidade de vida em regiões mais ricas.
+- **Census**: Dados de pobreza por região foram adicionados, com a hipótese de que regiões com maior pobreza impactam nos custos hospitalares. 
 - **Life Tables do CDC**: Incorporação de chances de sobrevivência por idade e gênero, extraídas de tabelas de mortalidade do CDC (`nvsr_66_04.csv`), para contextualizar os riscos de saúde.
 
 ### 2. Tarefas Realizadas
@@ -42,7 +43,7 @@ Dados obtidos do Kaggle (`insurance.csv`), contendo informações sobre idade, g
 #### Pré-processamento:
 
 - Tratamento de valores ausentes (se necessário).
-- Mesclagem dos dados do Kaggle com renda média (Census) e chances de sobrevivência (CDC), utilizando `pandas` para alinhar por idade, gênero e região.
+- Mesclagem dos dados do Kaggle com renda média (Census), pobreza (Census) e chances de sobrevivência (CDC), utilizando `pandas` para alinhar por idade, gênero e região.
 
 #### Modelagem:
 

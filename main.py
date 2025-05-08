@@ -1,14 +1,14 @@
 import pandas as pd
-import numpy as np
+from sklearn.preprocessing import StandardScaler
+
 from src.data.load_data import load_dataset
+from src.features.region_by_state import associate_and_aggregate_state_by_region
+from src.features.challenge_age import get_next_challenge_age
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 if __name__ == "__main__":
-    def get_next_challenge_age(age, available_ages):
-        """Retorna a próxima idade de desafio a partir de uma lista de idades disponíveis."""
-        next_ages = available_ages[available_ages >= age]
-        if len(next_ages) > 0:
-            return next_ages.min()
-        return np.nan  # Caso não haja idade maior (ex.: idade > máxima disponível)
+
 
     # Carregando datasets
     main_df = load_dataset("data/processed/simple_clean/insurance.csv", sep=",")
@@ -24,6 +24,7 @@ if __name__ == "__main__":
 
     # Garantir que 'age' seja inteiro
     main_df['age'] = main_df['age'].astype(int)
+    main_df['charges'] = main_df['age'].astype(int)
     chance_of_survive_df['age'] = chance_of_survive_df['age'].astype(int)
 
     # Obter idades disponíveis em nvsr_66_04.csv
@@ -68,3 +69,64 @@ if __name__ == "__main__":
     # Exibir o resultado com todas as colunas
     print("Dataset mesclado com próxima idade de desafio:")
     print(merged_df.head())
+
+    # lendo dataset de renda média
+    # Carregando datasets
+    state_by_region_df = load_dataset("data/processed/simple_clean/states_by_region.csv")
+    income_df = load_dataset("data/processed/simple_clean/stateonline_13(Sheet1).csv")
+    income_df["Income"] = income_df["Income"].str.replace('.', '', regex=False)  # remove separador de milhar
+    income_df["Income"] = income_df["Income"].astype(int)
+
+    income_by_region_df = associate_and_aggregate_state_by_region(income_df, state_by_region_df, "Income")
+    print(income_by_region_df.head())
+    merged_df = pd.merge(
+        merged_df,
+        income_by_region_df,
+        left_on=['region'],
+        right_on=['region'],
+        how='left'
+    )
+
+    print(merged_df.head())
+    print(merged_df.columns)
+    print(merged_df.isnull().sum())
+
+    # Exemplo com pandas
+    merged_df['age'].hist(bins=20)
+    plt.title('Histograma da Renda')
+    plt.xlabel('Idade')
+    plt.ylabel('Frequência')
+    plt.show()
+
+    # Ou com seaborn para um visual mais limpo
+    sns.histplot(merged_df['age'], bins=20, kde=True)
+    plt.title('Distribuição da Idade')
+    plt.xlabel('Idade')
+    plt.ylabel('Frequência')
+    plt.show()
+
+    # Seleciona só colunas numéricas
+    numerical_df = merged_df.select_dtypes(include='number')
+    # Padronize (média=0, desvio padrão=1)
+    scaler = StandardScaler()
+    numerical_scaled = scaler.fit_transform(numerical_df)
+
+    # Crie um DataFrame com as variáveis normalizadas
+    numerical_scaled_df = pd.DataFrame(numerical_scaled, columns=numerical_df.columns)
+
+    print(numerical_scaled_df.head())
+
+    # Calcula correlação
+    correlation_matrix = numerical_scaled_df.corr(method="kendall")
+
+    # Plota o heatmap
+    plt.figure(figsize=(10, 8))
+    sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', fmt=".2f")
+    plt.title('Mapa de Correlação entre Variáveis Numéricas')
+    plt.show()
+
+    sns.scatterplot(x=merged_df['age'], y=merged_df['survival_chance'])
+    plt.title('Idade vs Chance de Sobrevivência')
+    plt.xlabel('Idade')
+    plt.ylabel('Chance de Sobrevivência')
+    plt.show()

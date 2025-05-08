@@ -1,52 +1,52 @@
-State,Region
-Maryland,southeast
-New Hampshire,northeast
-Connecticut,northeast
-Virginia,southeast
-New Jersey,northeast
-Massachusetts,northeast
-Alaska,northwest
-District of Columbia,southeast
-Minnesota,northwest
-Colorado,northwest
-Washington,northwest
-Hawaii,northwest
-Utah,northwest
-California,northwest
-Wyoming,northwest
-North Dakota,northwest
-Rhode Island,northeast
-Vermont,northeast
-Nebraska,northwest
-Wisconsin,northwest
-Oregon,northwest
-Illinois,northwest
-Iowa,northwest
-Delaware,southeast
-Pennsylvania,northeast
-Texas,southwest
-New York,northeast
-South Dakota,northwest
-Maine,northeast
-Michigan,northwest
-Kansas,northwest
-Idaho,northwest
-Arizona,southwest
-Missouri,northwest
-Georgia,southeast
-Indiana,northwest
-Oklahoma,southwest
-Nevada,southwest
-Florida,southeast
-Ohio,northwest
-Montana,northwest
-South Carolina,southeast
-North Carolina,southeast
-Tennessee,southeast
-New Mexico,southwest
-Alabama,southeast
-West Virginia,southeast
-Kentucky,southeast
-Arkansas,southeast
-Louisiana,southeast
-Mississippi,southeast
+state;region
+Connecticut;northeast
+Maine;northeast
+Massachusetts;northeast
+New Hampshire;northeast
+New Jersey;northeast
+New York;northeast
+Pennsylvania;northeast
+Rhode Island;northeast
+Vermont;northeast
+Alabama;southeast
+Arkansas;southeast
+Delaware;southeast
+Florida;southeast
+Georgia;southeast
+Kentucky;southeast
+Louisiana;southeast
+Maryland;southeast
+Mississippi;southeast
+North Carolina;southeast
+South Carolina;southeast
+Tennessee;southeast
+Virginia;southeast
+West Virginia;southeast
+District of Columbia;southeast
+Idaho;northwest
+Iowa;northwest
+Minnesota;northwest
+Montana;northwest
+Nebraska;northwest
+North Dakota;northwest
+Oregon;northwest
+South Dakota;northwest
+Washington;northwest
+Wisconsin;northwest
+Wyoming;northwest
+Alaska;northwest
+Arizona;southwest
+California;southwest
+Colorado;southwest
+Hawaii;southwest
+Kansas;southwest
+Missouri;southwest
+Nevada;southwest
+New Mexico;southwest
+Oklahoma;southwest
+Texas;southwest
+Utah;southwest
+Illinois;southwest
+Indiana;southwest
+Michigan;southwest
+Ohio;southwest
