@@ -7,25 +7,51 @@ from src.features.challenge_age import get_next_challenge_age
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+from src.visualization.charts import plot_all_histograms
+from src.visualization.metadata import show_basic_infos
+
 if __name__ == "__main__":
-
-
     # Carregando datasets
     main_df = load_dataset("data/processed/simple_clean/insurance.csv", sep=",")
     chance_of_survive_df = load_dataset("data/processed/simple_clean/nvsr_66_04.csv")
+    state_by_region_df = load_dataset("data/processed/simple_clean/states_by_region.csv")
+    income_df = load_dataset("data/processed/simple_clean/stateonline_13(Sheet1).csv")
+    poverty_df = load_dataset("data/processed/simple_clean/state.csv", decimal=",")
 
-    # Verificar colunas para depuração
-    print("Colunas de main_df:", list(main_df.columns))
-    print("Colunas de chance_of_survive_df:", list(chance_of_survive_df.columns))
-    print("Valores únicos de sex em main_df:", main_df['sex'].value_counts())
+    # Adicionando nome a cada dataframe
+    main_df._name = "main_df"
+    chance_of_survive_df._name = "chance_of_survive_df"
+    state_by_region_df._name = "state_by_region_df"
+    income_df._name = "income_df"
+    poverty_df._name = "poverty_df"
 
-    # Padronizar nomes de colunas
+    # Deixando todas as colunas com nome em minusculo
+    main_df.columns = main_df.columns.str.lower()
     chance_of_survive_df.columns = chance_of_survive_df.columns.str.lower()
+    state_by_region_df.columns = state_by_region_df.columns.str.lower()
+    income_df.columns = income_df.columns.str.lower()
+    poverty_df.columns = poverty_df.columns.str.lower()
 
-    # Garantir que 'age' seja inteiro
+    # Descrição básica dos dataframes
+    show_basic_infos(main_df)
+    show_basic_infos(chance_of_survive_df)
+    show_basic_infos(state_by_region_df)
+    show_basic_infos(income_df)
+    show_basic_infos(poverty_df)
+
+    # Garantindo que as colunas sejam tratadas como numericas
     main_df['age'] = main_df['age'].astype(int)
-    main_df['charges'] = main_df['age'].astype(int)
+    main_df['charges'] = main_df['charges'].astype(float)
+    main_df['bmi'] = main_df['bmi'].astype(float)
+
     chance_of_survive_df['age'] = chance_of_survive_df['age'].astype(int)
+
+    # Analisando histogramas de todos os dfs
+    plot_all_histograms(main_df)
+    plot_all_histograms(chance_of_survive_df)
+    plot_all_histograms(state_by_region_df)
+    plot_all_histograms(income_df)
+    plot_all_histograms(poverty_df)
 
     # Obter idades disponíveis em nvsr_66_04.csv
     available_ages = chance_of_survive_df['age'].unique()
@@ -70,14 +96,10 @@ if __name__ == "__main__":
     print("Dataset mesclado com próxima idade de desafio:")
     print(merged_df.head())
 
-    # lendo dataset de renda média
-    # Carregando datasets
-    state_by_region_df = load_dataset("data/processed/simple_clean/states_by_region.csv")
-    income_df = load_dataset("data/processed/simple_clean/stateonline_13(Sheet1).csv")
-    income_df["Income"] = income_df["Income"].str.replace('.', '', regex=False)  # remove separador de milhar
-    income_df["Income"] = income_df["Income"].astype(int)
+    income_df["income"] = income_df["income"].str.replace('.', '', regex=False)  # remove separador de milhar
+    income_df["income"] = income_df["income"].astype(int)
 
-    income_by_region_df = associate_and_aggregate_state_by_region(income_df, state_by_region_df, "Income")
+    income_by_region_df = associate_and_aggregate_state_by_region(income_df, state_by_region_df, "income")
     print(income_by_region_df.head())
     merged_df = pd.merge(
         merged_df,
@@ -93,7 +115,7 @@ if __name__ == "__main__":
 
     # Exemplo com pandas
     merged_df['age'].hist(bins=20)
-    plt.title('Histograma da Renda')
+    plt.title('Histograma da Idade')
     plt.xlabel('Idade')
     plt.ylabel('Frequência')
     plt.show()
@@ -114,7 +136,7 @@ if __name__ == "__main__":
     # Crie um DataFrame com as variáveis normalizadas
     numerical_scaled_df = pd.DataFrame(numerical_scaled, columns=numerical_df.columns)
 
-    print(numerical_scaled_df.head())
+    print(numerical_scaled_df.head().to_string(max_cols=None))
 
     # Calcula correlação
     correlation_matrix = numerical_scaled_df.corr(method="kendall")
@@ -129,4 +151,8 @@ if __name__ == "__main__":
     plt.title('Idade vs Chance de Sobrevivência')
     plt.xlabel('Idade')
     plt.ylabel('Chance de Sobrevivência')
+    plt.show()
+
+    correlation_matrix = merged_df.select_dtypes(include='number').corr(method="pearson")
+    sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', fmt=".2f")
     plt.show()
