@@ -1,5 +1,8 @@
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 
 from src.data.load_data import load_dataset
 from src.features.region_by_state import associate_and_aggregate_state_by_region
@@ -32,19 +35,18 @@ if __name__ == "__main__":
     income_df.columns = income_df.columns.str.lower()
     poverty_df.columns = poverty_df.columns.str.lower()
 
+    # Garantindo que as colunas sejam tratadas como numericas
+    main_df['age'] = main_df['age'].astype(int)
+    main_df['charges'] = main_df['charges'].astype(float)
+    main_df['bmi'] = main_df['bmi'].astype(float)
+    chance_of_survive_df['age'] = chance_of_survive_df['age'].astype(int)
+
     # Descrição básica dos dataframes
     show_basic_infos(main_df)
     show_basic_infos(chance_of_survive_df)
     show_basic_infos(state_by_region_df)
     show_basic_infos(income_df)
     show_basic_infos(poverty_df)
-
-    # Garantindo que as colunas sejam tratadas como numericas
-    main_df['age'] = main_df['age'].astype(int)
-    main_df['charges'] = main_df['charges'].astype(float)
-    main_df['bmi'] = main_df['bmi'].astype(float)
-
-    chance_of_survive_df['age'] = chance_of_survive_df['age'].astype(int)
 
     # Analisando histogramas de todos os dfs
     plot_all_histograms(main_df)
@@ -127,6 +129,16 @@ if __name__ == "__main__":
     plt.ylabel('Frequência')
     plt.show()
 
+    # transformando dados categóricos em numéricos
+    merged_df['smoker'] = merged_df['smoker'].map({'yes': 1, 'no': 0})
+    merged_df = pd.get_dummies(merged_df, columns=['sex'], drop_first=True) # one hoting encoding
+    merged_df = pd.get_dummies(merged_df, columns=['region'], drop_first=True) # one hoting encoding
+
+    bool_cols = merged_df.select_dtypes(include='bool').columns
+    merged_df[bool_cols] = merged_df[bool_cols].astype(int)
+
+    print(merged_df.head())
+
     # Seleciona só colunas numéricas
     numerical_df = merged_df.select_dtypes(include='number')
     # Padronize (média=0, desvio padrão=1)
@@ -156,3 +168,37 @@ if __name__ == "__main__":
     correlation_matrix = merged_df.select_dtypes(include='number').corr(method="pearson")
     sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', fmt=".2f")
     plt.show()
+
+    target = 'charges'
+    features = merged_df.drop(columns=[target]).select_dtypes(include='number').columns.tolist()
+
+    print(merged_df.head())
+    plt.figure(figsize=(8, 6))
+    sns.histplot(merged_df['charges'], bins=30, kde=True)
+    plt.title('Distribuição dos Charges')
+    plt.xlabel('Charges')
+    plt.ylabel('Frequência')
+    plt.show()
+
+    X = merged_df[features]
+    y = merged_df[target]
+
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.3, random_state=42
+    )
+
+    model = LinearRegression()
+
+    model.fit(X_train, y_train)
+
+    y_pred = model.predict(X_test)
+
+    mse = mean_squared_error(y_test, y_pred)
+    rmse = mse ** 0.5
+    mae = mean_absolute_error(y_test, y_pred)
+    r2 = r2_score(y_test, y_pred)
+
+    print(f"MSE: {mse:.2f}")
+    print(f"RMSE: {rmse:.2f}")
+    print(f"MAE: {mae:.2f}")
+    print(f"R²: {r2:.2f}")
