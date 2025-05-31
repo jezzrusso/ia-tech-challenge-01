@@ -1,4 +1,6 @@
 import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 def show_basic_infos(df: pd.DataFrame, max_unique_values=10):
     print(f"\n============== Início de {df._name} ==============\n")
@@ -36,4 +38,16 @@ def show_basic_infos(df: pd.DataFrame, max_unique_values=10):
             print(f"\nColuna '{col}' contém múltiplos tipos de dados:")
             print(tipos)
 
+    print("\n🔁 Quantidade de linhas duplicadas no DataFrame:")
+    print(df.duplicated().sum())
+
+    print("\n📉 Colunas com baixa variância (apenas um valor distinto):")
+    low_variance = df.columns[df.nunique() == 1]
+    if len(low_variance) > 0:
+        print(low_variance.tolist())
+    else:
+        print("Nenhuma coluna com baixa variância.")
+
     print(f"\n============== Fim de {df._name} ==============\n")
+
+    input("⏸️ Pressione Enter para continuar...")
