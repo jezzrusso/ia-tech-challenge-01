@@ -9,7 +9,8 @@ from src.features.feature_engineering import prepare_dataframes
 from src.visualization.metadata import show_basic_infos
 from src.visualization.charts import plot_exploratory_graphs
 from src.models.train import get_models, split_and_scale, train_model
-from src.visualization.plots import plot_predictions, plot_residuals
+from src.visualization.plots import plot_predictions, plot_residuals, plot_age_bmi_smoker_vs_charges, \
+    plot_boxplot_with_outliers_count
 
 if __name__ == "__main__":
     # Carregar datasets
@@ -30,8 +31,26 @@ if __name__ == "__main__":
 
     merged_df = prepare_dataframes(main_df, chance_df, state_region_df, income_df)
     merged_df._name = "merged_df"
+
     show_basic_infos(merged_df)
     plot_exploratory_graphs(merged_df)
+
+    # Visualização principal
+    plot_age_bmi_smoker_vs_charges(merged_df)
+
+    # Visualizações adicionais com estilo (sex, region, children)
+    plot_age_bmi_smoker_vs_charges(merged_df, style_col='sex_male')  # sexo (0 ou 1)
+    plot_age_bmi_smoker_vs_charges(merged_df, style_col='region_original')  # regiões (precisa da coluna region no df, se tiver)
+    plot_age_bmi_smoker_vs_charges(merged_df, style_col='children')  # número de filhos
+
+    # Exemplo para 'smoker' e 'charges'
+    plot_boxplot_with_outliers_count(merged_df, 'smoker', 'charges')
+
+    # Exemplo para 'sex' e 'charges'
+    plot_boxplot_with_outliers_count(merged_df, 'sex_male', 'charges')
+
+    # Exemplo para 'region' e 'charges'
+    plot_boxplot_with_outliers_count(merged_df, 'region_original', 'charges')
 
     selected_features = ['age', 'bmi', 'smoker']
     X, y = merged_df[selected_features], merged_df['charges']

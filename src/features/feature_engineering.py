@@ -7,6 +7,8 @@ def prepare_dataframes(main_df, chance_df, state_region_df, income_df):
     for df in [main_df, chance_df, state_region_df, income_df]:
         df.columns = df.columns.str.lower()
 
+    # Removendo duplicidade
+    main_df = main_df.drop_duplicates()
     # Normalização de colunas e tipos
     main_df['age'] = main_df['age'].astype(int)
     main_df['charges'] = main_df['charges'].astype(float)
@@ -38,6 +40,8 @@ def prepare_dataframes(main_df, chance_df, state_region_df, income_df):
 
     # Encoding e tratamento booleanos
     merged_df = pd.get_dummies(merged_df, columns=['sex'], drop_first=True)
+
+    merged_df['region_original'] = merged_df['region']
     merged_df = pd.get_dummies(merged_df, columns=['region'], drop_first=True)
     bool_cols = merged_df.select_dtypes(include='bool').columns
     merged_df[bool_cols] = merged_df[bool_cols].astype(int)
