@@ -1,59 +1,47 @@
 # Tech Challenge: Modelo Preditivo de Custos Médicos
 
 ## Visão Geral
-
-Este projeto é parte de um desafio técnico para desenvolver um modelo preditivo de regressão que prevê os custos médicos individuais cobrados pelo seguro de saúde. O objetivo é criar um modelo confiável que utilize características como idade, gênero, IMC, número de filhos, status de fumante, região e outras variáveis relevantes para estimar os encargos médicos.
-
-Os dados utilizados são de aproximadamente 2014 e foram enriquecidos para melhorar a qualidade das previsões.
-
----
+Este projeto faz parte de um desafio técnico para desenvolver um modelo preditivo de regressão que prevê os custos médicos individuais cobrados pelo seguro de saúde. O objetivo é construir um modelo confiável que utilize variáveis como idade, sexo, IMC, número de filhos, status de fumante, região e outras características para prever os encargos médicos. Os dados utilizados foram enriquecidos com informações adicionais (renda média por estado/região, índice de pobreza e chances de sobrevivência) para aprimorar as previsões.
 
 ## O Problema
-
-O desafio consiste em:
-
-- Explorar e analisar uma base de dados com variáveis como idade, gênero, IMC, filhos, fumante, região e encargos.
-- Pré-processar os dados, tratando valores ausentes e convertendo variáveis categóricas.
-- Construir um modelo de regressão (ex.: Regressão Linear, Árvores de Decisão) para prever os custos médicos.
-- Treinar e avaliar o modelo, utilizando métricas estatísticas (p-value, intervalos de confiança).
-- Apresentar resultados visuais (gráficos de previsões vs. valores reais) e um relatório com análise, insights e validação estatística.
-
----
+O desafio proposto inclui:
+- Exploração e análise descritiva dos dados.
+- Pré-processamento, tratamento de dados ausentes e conversão de variáveis categóricas.
+- Mesclagem com dados externos (renda, pobreza e chances de sobrevivência).
+- Treinamento de modelos de regressão (Linear Regression, Decision Tree, Random Forest, Gradient Boosting).
+- Avaliação com métricas como MSE, RMSE, MAE e R².
+- Visualizações comparando valores reais e preditos, análise de resíduos e distribuição.
+- Criação de gráficos para apresentação.
 
 ## Metodologia
 
-### 1. Fonte de Dados
+### Fonte de Dados
+- `insurance.csv`: Dados sobre idade, sexo, IMC, filhos, fumante, região e encargos médicos.
+- `nvsr_66_04.csv`: Tabelas do CDC com chances de sobrevivência por idade e sexo.
+- `stateonline_13(Sheet1).csv`: Renda média por estado.
+- `state.csv`: Percentual de pobreza por estado.
+- `states_by_region.csv`: Mapeamento de estados para regiões.
 
-**Base Principal**:  
-Dados obtidos do Kaggle (`insurance.csv`), contendo informações sobre idade, gênero, IMC, filhos, fumante, região e encargos médicos.
+### Etapas Realizadas
+- Carregamento e exploração inicial dos dados com `pandas`.
+- Análise descritiva, gráficos de distribuição e mapa de correlação.
+- Padronização de colunas e tratamento de variáveis categóricas.
+- Criação de features como `next_challenge_age` e `survival_chance`.
+- Mesclagem com dados externos e codificação one-hot.
+- Treinamento e avaliação de modelos:
+  - Linear Regression
+  - Decision Tree Regressor
+  - Random Forest Regressor
+  - Gradient Boosting Regressor
+- Visualizações de comparações real vs predito e análise de resíduos.
 
-**Enriquecimento**:
+## Como Executar
+1. Instale as dependências:
 
-- **Census**: Dados de renda média por região foram adicionados, com a hipótese de que a renda média impacta os custos hospitalares devido à maior qualidade de vida em regiões mais ricas.
-- **Census**: Dados de pobreza por região foram adicionados, com a hipótese de que regiões com maior pobreza impactam nos custos hospitalares. 
-- **Life Tables do CDC**: Incorporação de chances de sobrevivência por idade e gênero, extraídas de tabelas de mortalidade do CDC (`nvsr_66_04.csv`), para contextualizar os riscos de saúde.
+pip install pandas numpy scikit-learn matplotlib seaborn
 
-### 2. Tarefas Realizadas
+2. Execute o script principal
 
-#### Exploração de Dados:
+python main.py
 
-- Carregamento e análise estatística descritiva dos dados.
-- Visualização de distribuições (ex.: histogramas de idade, IMC, encargos).
-
-#### Pré-processamento:
-
-- Tratamento de valores ausentes (se necessário).
-- Mesclagem dos dados do Kaggle com renda média (Census), pobreza (Census) e chances de sobrevivência (CDC), utilizando `pandas` para alinhar por idade, gênero e região.
-
-#### Modelagem:
-
-- A fazer
-
-#### Treinamento e Avaliação:
-
-- A fazer
-
-#### Resultados:
-
-- A fazer
-
+3. Observe os resultados e gráficos gerados.

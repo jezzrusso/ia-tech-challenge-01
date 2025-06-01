@@ -1,276 +1,98 @@
-import pandas as pd
-from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LinearRegression
+from sklearn.neighbors import KNeighborsRegressor
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
-from sklearn.tree import DecisionTreeRegressor
+from sklearn.utils import resample
+import numpy as np
+import statsmodels.api as sm
 
-from src.data.load_data import load_dataset
-from src.features.region_by_state import associate_and_aggregate_state_by_region
-from src.features.challenge_age import get_next_challenge_age
-from src.visualization.charts import plot_exploratory_graphs
+from src.data.load_data import load_insurance_data, load_survival_data, load_state_region_data, load_income_data, load_poverty_data
+from src.features.feature_engineering import prepare_dataframes
 from src.visualization.metadata import show_basic_infos
-
-import matplotlib.pyplot as plt
-import seaborn as sns
+from src.visualization.charts import plot_exploratory_graphs
+from src.models.train import get_models, split_and_scale, train_model
+from src.visualization.plots import plot_predictions, plot_residuals
 
 if __name__ == "__main__":
-    # Carregando datasets
-    main_df = load_dataset("data/processed/simple_clean/insurance.csv", sep=",")
-    chance_of_survive_df = load_dataset("data/processed/simple_clean/nvsr_66_04.csv")
-    state_by_region_df = load_dataset("data/processed/simple_clean/states_by_region.csv")
-    income_df = load_dataset("data/processed/simple_clean/stateonline_13(Sheet1).csv")
-    poverty_df = load_dataset("data/processed/simple_clean/state.csv", decimal=",")
+    # Carregar datasets
+    main_df = load_insurance_data()
+    chance_df = load_survival_data()
+    state_region_df = load_state_region_data()
+    income_df = load_income_data()
+    poverty_df = load_poverty_data()
 
-    # Deixar colunas em minúsculo
-    for df in [main_df, chance_of_survive_df, state_by_region_df, income_df, poverty_df]:
-        df.columns = df.columns.str.lower()
-
-    # Garantir tipos corretos
-    main_df['age'] = main_df['age'].astype(int)
-    main_df['charges'] = main_df['charges'].astype(float)
-    main_df['bmi'] = main_df['bmi'].astype(float)
-    chance_of_survive_df['age'] = chance_of_survive_df['age'].astype(int)
-
-    # Converter smoker para numérico
-    main_df['smoker'] = main_df['smoker'].map({'yes': 1, 'no': 0})
-
-    # Remoção de duplicados do dataset principal
-    main_df = main_df.drop_duplicates()
-
-    # Adicionando nome a cada dataframe
     main_df._name = "main_df"
-    chance_of_survive_df._name = "chance_of_survive_df"
-    state_by_region_df._name = "state_by_region_df"
+    chance_df._name = "chance_of_survive_df"
+    state_region_df._name = "state_by_region_df"
     income_df._name = "income_df"
     poverty_df._name = "poverty_df"
 
-    # EDA antes da junção
     show_basic_infos(main_df)
-    show_basic_infos(chance_of_survive_df)
-    show_basic_infos(state_by_region_df)
-    show_basic_infos(income_df)
-    show_basic_infos(poverty_df)
     plot_exploratory_graphs(main_df)
 
-    # MESCLAR DATASETS
-    available_ages = chance_of_survive_df['age'].unique()
-    available_ages.sort()
-    main_df['next_challenge_age'] = main_df['age'].apply(lambda x: get_next_challenge_age(x, available_ages))
+    merged_df = prepare_dataframes(main_df, chance_df, state_region_df, income_df)
+    merged_df._name = "merged_df"
+    show_basic_infos(merged_df)
+    plot_exploratory_graphs(merged_df)
 
-    chance_male = chance_of_survive_df[['age', 'male']].rename(columns={'male': 'survival_chance'}).copy()
-    chance_male['sex'] = 'male'
-    chance_female = chance_of_survive_df[['age', 'female']].rename(columns={'female': 'survival_chance'}).copy()
-    chance_female['sex'] = 'female'
-    chance_df = pd.concat([chance_male, chance_female], ignore_index=True)
-
-    merged_df = pd.merge(main_df, chance_df, left_on=['next_challenge_age', 'sex'], right_on=['age', 'sex'], how='left')
-    merged_df = merged_df.drop(columns=['age_y'], errors='ignore').rename(columns={'age_x': 'age'})
-    merged_df['survival_chance'] = merged_df['survival_chance'].fillna(0)
-
-    income_df["income"] = income_df["income"].str.replace('.', '', regex=False).astype(int)
-    income_by_region_df = associate_and_aggregate_state_by_region(income_df, state_by_region_df, "income")
-    merged_df = pd.merge(merged_df, income_by_region_df, on='region', how='left')
-
-    # Encoding categóricos e conversão de booleanos
-    merged_df = pd.get_dummies(merged_df, columns=['sex'], drop_first=True)
-    merged_df = pd.get_dummies(merged_df, columns=['region'], drop_first=True)
-    bool_cols = merged_df.select_dtypes(include='bool').columns
-    merged_df[bool_cols] = merged_df[bool_cols].astype(int)
-
-    # DEFINIR FEATURES E TARGET
-    target = 'charges'
-    feature_cols = merged_df.drop(columns=[target]).select_dtypes(include='number').columns.tolist()
-
-    X = merged_df[feature_cols]
-    y = merged_df[target]
-
-    # DIVIDIR TREINO E TESTE
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
-
-    # ESCALAR APENAS AS FEATURES
-    scaler = StandardScaler()
-    X_train_scaled = scaler.fit_transform(X_train)
-    X_test_scaled = scaler.transform(X_test)
-
-    # TREINAR O MODELO
-    model = LinearRegression()
-    model.fit(X_train_scaled, y_train)
-
-    # PREDIÇÃO
-    y_pred = model.predict(X_test_scaled)
-
-    # MÉTRICAS DE AVALIAÇÃO
-    mse = mean_squared_error(y_test, y_pred)
-    rmse = mse ** 0.5
-    mae = mean_absolute_error(y_test, y_pred)
-    r2 = r2_score(y_test, y_pred)
-
-    print("\n📊 Resultados do Modelo:")
-    print(f"MSE: {mse:.2f}")
-    print(f"RMSE: {rmse:.2f}")
-    print(f"MAE: {mae:.2f}")
-    print(f"R²: {r2:.2f}")
-
-    plt.figure(figsize=(8, 6))
-    sns.histplot(main_df['charges'], bins=30, kde=True)
-    plt.title('Distribuição dos Encargos (charges)')
-    plt.xlabel('Charges')
-    plt.ylabel('Frequência')
-    plt.show()
-
-    input("Pressione Enter para continuar...")
-
-    plt.figure(figsize=(8, 6))
-    sns.histplot(main_df['charges'], bins=30, kde=True)
-    plt.title('Distribuição dos Encargos (charges)')
-    plt.xlabel('Charges')
-    plt.ylabel('Frequência')
-    plt.show()
-
-    for col in ['smoker', 'region', 'sex']:
-        plt.figure(figsize=(8, 6))
-        sns.boxplot(x=col, y='charges', data=main_df)
-        plt.title(f'Boxplot de Charges por {col}')
-        plt.show()
-
-    for col in ['age', 'bmi']:
-        plt.figure(figsize=(8, 6))
-        sns.scatterplot(x=col, y='charges', data=main_df)
-        plt.title(f'{col} vs Charges')
-        plt.show()
-
-    plt.figure(figsize=(10, 8))
-    sns.heatmap(main_df.corr(numeric_only=True), annot=True, fmt=".2f", cmap='coolwarm')
-    plt.title('Mapa de Correlação')
-    plt.show()
-
-    for col in ['smoker', 'region', 'sex']:
-        plt.figure(figsize=(6, 4))
-        sns.countplot(x=col, data=main_df)
-        plt.title(f'Distribuição de {col}')
-        plt.show()
-
-    plt.figure(figsize=(8, 6))
-    sns.scatterplot(x='age', y='charges', hue='smoker', size='bmi', data=main_df, sizes=(20, 200))
-    plt.title('Idade vs Charges (Colorido por Smoker e Tamanho pelo BMI)')
-    plt.xlabel('Idade')
-    plt.ylabel('Charges')
-    plt.show()
-
-    plt.figure(figsize=(8, 6))
-    sns.scatterplot(
-        x='age',
-        y='charges',
-        hue='smoker',  # cor = smoker (0 ou 1)
-        size='bmi',  # tamanho = bmi
-        style='sex',  # estilo de marcador = sexo
-        data=main_df,
-        sizes=(20, 200),
-        legend='full'
-    )
-    plt.title('Idade vs Charges (Cor=Smoker, Tamanho=BMI, Marcador=Sexo)')
-    plt.xlabel('Idade')
-    plt.ylabel('Charges')
-    plt.legend(bbox_to_anchor=(1.05, 1), loc=2)
-    plt.show()
-
-    plt.figure(figsize=(8, 6))
-    sns.scatterplot(
-        x='age',
-        y='charges',
-        hue='smoker',  # cor = smoker (0 ou 1)
-        size='bmi',  # tamanho = bmi
-        style='region',  # estilo de marcador = region
-        data=main_df,
-        sizes=(20, 200),
-        legend='full'
-    )
-    plt.title('Idade vs Charges (Cor=Smoker, Tamanho=BMI, Marcador=Region)')
-    plt.xlabel('Idade')
-    plt.ylabel('Charges')
-    plt.legend(bbox_to_anchor=(1.05, 1), loc=2)
-    plt.show()
-
-    # Selecionar as features mais relevantes
     selected_features = ['age', 'bmi', 'smoker']
+    X, y = merged_df[selected_features], merged_df['charges']
 
-    X = merged_df[selected_features]
-    y = merged_df[target]
+    X_train, X_test, y_train, y_test = split_and_scale(X, y)
 
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.3, random_state=42
-    )
+    for name, model in get_models().items():
+        result = train_model(model, X_train, X_test, y_train, y_test)
+        print(f"\nResultados do {name}:")
+        print(f"MSE: {result['mse']:.2f}")
+        print(f"RMSE: {result['rmse']:.2f}")
+        print(f"MAE: {result['mae']:.2f}")
+        print(f"R²: {result['r2']:.4f}")
+        plot_predictions(y_test, result['y_pred'], name)
+        plot_residuals(y_test, result['y_pred'], name)
 
-    # Treinar modelo Random Forest
-    model = RandomForestRegressor(
-        n_estimators=100,  # Número de árvores
-        max_depth=None,  # Sem limite de profundidade inicial
-        random_state=42
-    )
-    model.fit(X_train_scaled, y_train)
+        # Intervalo de confiança via bootstrap para R²
+        print(f"Intervalo de confiança para R² (bootstrap) - {name}:")
+        r2_scores = []
+        for _ in range(1000):
+            X_resampled, y_resampled = resample(X_test, y_test)
+            y_pred_resampled = model.predict(X_resampled)
+            r2_scores.append(r2_score(y_resampled, y_pred_resampled))
+        r2_mean = np.mean(r2_scores)
+        r2_ci = np.percentile(r2_scores, [2.5, 97.5])
+        print(f"R² médio: {r2_mean:.4f}")
+        print(f"Intervalo de confiança 95%: [{r2_ci[0]:.4f}, {r2_ci[1]:.4f}]")
 
-    # Fazer predições
-    y_pred = model.predict(X_test_scaled)
+        # Validação estatística com p-values e intervalos (apenas para Linear Regression)
+        if name == 'Linear Regression':
+            print("\nValidação estatística para Regressão Linear:")
+            X_train_const = sm.add_constant(X_train)
+            ols_model = sm.OLS(y_train, X_train_const).fit()
+            print(ols_model.summary())
 
-    # Avaliar o modelo
-    mse = mean_squared_error(y_test, y_pred)
-    rmse = mse ** 0.5
-    mae = mean_absolute_error(y_test, y_pred)
-    r2 = r2_score(y_test, y_pred)
+    # Avaliar KNN separado
+    print("\nResultados do KNN Regressor")
+    model_knn = KNeighborsRegressor(n_neighbors=5)
+    model_knn.fit(X_train, y_train)
+    y_pred_knn = model_knn.predict(X_test)
 
+    mse_knn = mean_squared_error(y_test, y_pred_knn)
+    rmse_knn = mse_knn ** 0.5
+    mae_knn = mean_absolute_error(y_test, y_pred_knn)
+    r2_knn = r2_score(y_test, y_pred_knn)
 
+    print(f"MSE: {mse_knn:.2f}")
+    print(f"RMSE: {rmse_knn:.2f}")
+    print(f"MAE: {mae_knn:.2f}")
+    print(f"R²: {r2_knn:.4f}")
+    plot_predictions(y_test, y_pred_knn, "KNN Regressor")
+    plot_residuals(y_test, y_pred_knn, "KNN Regressor")
 
-    print("\n📊 Resultados do Random Forest com 3 Features:")
-    print(f"MSE: {mse:.2f}")
-    print(f"R²: {r2:.4f}")
-    print(f"RMSE: {rmse:.2f}")
-    print(f"MAE: {mae:.2f}")
-
-    # Visualizar Real vs Predito
-    plt.figure(figsize=(6, 4))
-    sns.scatterplot(x=y_test, y=y_pred)
-    plt.plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], 'r--')
-    plt.xlabel('Valores Reais')
-    plt.ylabel('Valores Preditos')
-    plt.title('Real vs Predito - Random Forest')
-    plt.show()
-
-    # Visualizar distribuição dos resíduos
-    residuos = y_test - y_pred
-    plt.figure(figsize=(6, 4))
-    sns.histplot(residuos, kde=True)
-    plt.title('Distribuição dos Resíduos - Random Forest')
-    plt.xlabel('Erro')
-    plt.show()
-
-    print("\n📊 Resultados do Decision Tree")
-    model_dt = DecisionTreeRegressor(random_state=42)
-    model_dt.fit(X_train_scaled, y_train)
-    y_pred_dt = model_dt.predict(X_test_scaled)
-
-    mse_dt = mean_squared_error(y_test, y_pred_dt)
-    rmse_dt = mse_dt ** 0.5
-    mae_dt = mean_absolute_error(y_test, y_pred_dt)
-    r2_dt = r2_score(y_test, y_pred_dt)
-
-    print(f"MSE: {mse_dt:.2f}")
-    print(f"RMSE: {rmse_dt:.2f}")
-    print(f"MAE: {mae_dt:.2f}")
-    print(f"R²: {r2_dt:.4f}")
-
-    print("\n📊 Resultados do Gradient Boosting")
-    model_gb = GradientBoostingRegressor(random_state=42)
-    model_gb.fit(X_train_scaled, y_train)
-    y_pred_gb = model_gb.predict(X_test_scaled)
-
-    mse_gb = mean_squared_error(y_test, y_pred_gb)
-    rmse_gb = mse_gb ** 0.5
-    mae_gb = mean_absolute_error(y_test, y_pred_gb)
-    r2_gb = r2_score(y_test, y_pred_gb)
-
-    print(f"MSE: {mse_gb:.2f}")
-    print(f"RMSE: {rmse_gb:.2f}")
-    print(f"MAE: {mae_gb:.2f}")
-    print(f"R²: {r2_gb:.4f}")
+    # Intervalo de confiança via bootstrap para R² do KNN
+    print("Intervalo de confiança para R² (bootstrap) - KNN Regressor:")
+    r2_scores_knn = []
+    for _ in range(1000):
+        X_resampled, y_resampled = resample(X_test, y_test)
+        y_pred_resampled = model_knn.predict(X_resampled)
+        r2_scores_knn.append(r2_score(y_resampled, y_pred_resampled))
+    r2_mean_knn = np.mean(r2_scores_knn)
+    r2_ci_knn = np.percentile(r2_scores_knn, [2.5, 97.5])
+    print(f"R² médio: {r2_mean_knn:.4f}")
+    print(f"Intervalo de confiança 95%: [{r2_ci_knn[0]:.4f}, {r2_ci_knn[1]:.4f}]")

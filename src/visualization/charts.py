@@ -14,7 +14,7 @@ def plot_exploratory_graphs(df, bins=20, kde=True, cols_per_row=3, figsize=(15, 
     numeric_cols = df.select_dtypes(include='number').columns
     cat_cols = df.select_dtypes(include=['object', 'category']).columns
 
-    # 1️⃣ Histogramas para colunas numéricas
+    # Histogramas para colunas numéricas
     n_cols = len(numeric_cols)
     n_rows = math.ceil(n_cols / cols_per_row)
     if n_cols > 0:
@@ -34,9 +34,9 @@ def plot_exploratory_graphs(df, bins=20, kde=True, cols_per_row=3, figsize=(15, 
         plt.tight_layout()
         plt.show()
     else:
-        print("⚠️ Nenhuma coluna numérica para plotar histogramas.")
+        print("Nenhuma coluna numérica para plotar histogramas.")
 
-    # 2️⃣ Gráficos de contagem para colunas categóricas
+    # 2Gráficos de contagem para colunas categóricas
     if len(cat_cols) > 0:
         for col in cat_cols:
             plt.figure(figsize=(6, 4))
@@ -44,16 +44,16 @@ def plot_exploratory_graphs(df, bins=20, kde=True, cols_per_row=3, figsize=(15, 
             plt.title(f'Distribuição de {col}')
             plt.show()
     else:
-        print("⚠️ Nenhuma coluna categórica para plotar contagens.")
+        print("Nenhuma coluna categórica para plotar contagens.")
 
-    # 3️⃣ Mapa de correlação
+    # Mapa de correlação
     if len(numeric_cols) > 1:
         plt.figure(figsize=(10, 8))
         sns.heatmap(df.corr(numeric_only=True), annot=True, fmt=".2f", cmap='coolwarm')
         plt.title('Mapa de Correlação entre Variáveis Numéricas')
         plt.show()
     else:
-        print("⚠️ Não há colunas numéricas suficientes para mapa de correlação.")
+        print("Não há colunas numéricas suficientes para mapa de correlação.")
 
 def plot_scatterplot(df, x_col, y_col):
     """
@@ -67,6 +67,6 @@ def plot_scatterplot(df, x_col, y_col):
         plt.ylabel(y_col)
         plt.show()
     else:
-        print(f"⚠️ As colunas '{x_col}' e/ou '{y_col}' não foram encontradas no DataFrame.")
+        print(f"As colunas '{x_col}' e/ou '{y_col}' não foram encontradas no DataFrame.")
 
-    input("⏸️ Pressione Enter para continuar...")
+    input("Pressione Enter para continuar...")
