@@ -14,6 +14,3 @@ def load_state_region_data():
 
 def load_income_data():
     return load_dataset("data/processed/simple_clean/stateonline_13(Sheet1).csv")
-
-def load_poverty_data():
-    return load_dataset("data/processed/simple_clean/state.csv", decimal=",")

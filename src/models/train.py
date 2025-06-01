@@ -28,6 +28,6 @@ def get_models():
     return {
         'Linear Regression': LinearRegression(),
         'Decision Tree': DecisionTreeRegressor(random_state=42),
-        'Random Forest': RandomForestRegressor(n_estimators=100, random_state=42),
+        'Random Forest': RandomForestRegressor(n_estimators=300, random_state=42),
         'Gradient Boosting': GradientBoostingRegressor(random_state=42)
     }

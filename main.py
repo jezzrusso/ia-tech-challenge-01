@@ -4,7 +4,7 @@ from sklearn.utils import resample
 import numpy as np
 import statsmodels.api as sm
 
-from src.data.load_data import load_insurance_data, load_survival_data, load_state_region_data, load_income_data, load_poverty_data
+from src.data.load_data import load_insurance_data, load_survival_data, load_state_region_data, load_income_data
 from src.features.feature_engineering import prepare_dataframes
 from src.visualization.metadata import show_basic_infos
 from src.visualization.charts import plot_exploratory_graphs
@@ -18,13 +18,11 @@ if __name__ == "__main__":
     chance_df = load_survival_data()
     state_region_df = load_state_region_data()
     income_df = load_income_data()
-    poverty_df = load_poverty_data()
 
     main_df._name = "main_df"
     chance_df._name = "chance_of_survive_df"
     state_region_df._name = "state_by_region_df"
     income_df._name = "income_df"
-    poverty_df._name = "poverty_df"
 
     show_basic_infos(main_df)
     plot_exploratory_graphs(main_df)
